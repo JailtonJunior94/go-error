@@ -5,12 +5,17 @@ import (
 	"fmt"
 
 	"github.com/jailtonjunior94/go-error/internal/domain"
+	"github.com/jailtonjunior94/go-error/pkg/o11y"
 )
 
-type UserUseCase struct{}
+type UserUseCase struct {
+	telemetry o11y.Telemetry
+}
 
-func NewUserUseCase() *UserUseCase {
-	return &UserUseCase{}
+func NewUserUseCase(telemetry o11y.Telemetry) *UserUseCase {
+	return &UserUseCase{
+		telemetry: telemetry,
+	}
 }
 
 func (uc *UserUseCase) GetUserByID(id string) (string, error) {

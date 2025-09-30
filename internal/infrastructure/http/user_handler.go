@@ -1,16 +1,25 @@
 package http
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"github.com/jailtonjunior94/go-error/internal/application/usecase"
+	"github.com/jailtonjunior94/go-error/pkg/o11y"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type UserHandler struct {
-	usecase *usecase.UserUseCase
+	telemetry o11y.Telemetry
+	usecase   *usecase.UserUseCase
 }
 
-func NewUserHandler(u *usecase.UserUseCase) *UserHandler {
-	return &UserHandler{usecase: u}
+func NewUserHandler(
+	telemetry o11y.Telemetry,
+	usecase *usecase.UserUseCase,
+) *UserHandler {
+	return &UserHandler{
+		telemetry: telemetry,
+		usecase:   usecase,
+	}
 }
 
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
