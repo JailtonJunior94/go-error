@@ -6,6 +6,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -22,7 +23,16 @@ type Span interface {
 	End()
 	SetAttributes(attrs ...Attribute)
 	AddEvent(name string, attrs ...Attribute)
+	SetStatus(status SpanStatus, msg string)
 }
+
+type SpanStatus int
+
+const (
+	SpanStatusOk SpanStatus = iota
+	SpanStatusError
+	SpanStatusUnset
+)
 
 type Attribute struct {
 	Key   string
@@ -87,6 +97,20 @@ func (s *otelSpan) SetAttributes(attrs ...Attribute) {
 
 func (s *otelSpan) AddEvent(name string, attrs ...Attribute) {
 	s.span.AddEvent(name, trace.WithAttributes(convertAttrs(attrs)...))
+}
+
+var statusMap = map[SpanStatus]codes.Code{
+	SpanStatusOk:    codes.Ok,
+	SpanStatusError: codes.Error,
+	SpanStatusUnset: codes.Unset,
+}
+
+func (s *otelSpan) SetStatus(status SpanStatus, msg string) {
+	if code, ok := statusMap[status]; ok {
+		s.span.SetStatus(code, msg)
+		return
+	}
+	s.span.SetStatus(codes.Unset, msg)
 }
 
 func convertAttrs(attrs []Attribute) []attribute.KeyValue {
