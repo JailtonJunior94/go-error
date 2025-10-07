@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -18,8 +19,12 @@ func NewUserUseCase(telemetry o11y.Telemetry) *UserUseCase {
 	}
 }
 
-func (uc *UserUseCase) GetUserByID(id string) (string, error) {
+func (uc *UserUseCase) GetUserByID(ctx context.Context, id string) (string, error) {
+	ctx, span := uc.telemetry.Tracer().Start(ctx, "create_user_usecase.execute")
+	defer span.End()
+
 	if id == "" {
+		span.SetAttributes(o11y.Attribute{Key: "error", Value: "ID do usuário não pode ser vazio"})
 		return "", domain.NewDomainError(
 			domain.ErrInvalidInput,
 			"ID do usuário não pode ser vazio",

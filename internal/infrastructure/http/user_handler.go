@@ -25,7 +25,7 @@ func NewUserHandler(
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	user, err := h.usecase.GetUserByID(id)
+	user, err := h.usecase.GetUserByID(c.Context(), id)
 	if err != nil {
 		// apenas retorna o erro, middleware tratará
 		return err
