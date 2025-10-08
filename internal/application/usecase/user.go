@@ -23,6 +23,8 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id string) (string, erro
 	ctx, span := uc.telemetry.Tracer().Start(ctx, "create_user_usecase.execute")
 	defer span.End()
 
+	uc.telemetry.Metrics().AddCounter(ctx, "user_usecase_calls_total", 1, nil)
+
 	if id == "" {
 		span.SetAttributes(o11y.Attribute{Key: "error", Value: "ID do usuário não pode ser vazio"})
 		return "", domain.NewDomainError(

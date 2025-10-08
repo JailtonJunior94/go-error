@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"log/slog"
 
 	"github.com/jailtonjunior94/go-error/internal/application/usecase"
 	infraHttp "github.com/jailtonjunior94/go-error/internal/infrastructure/http"
@@ -36,7 +35,15 @@ func main() {
 		}
 	}()
 
-	logger := o11y.NewLogger(slog.New(slog.NewTextHandler(log.Writer(), &slog.HandlerOptions{})))
+	logger, shutdown, err := o11y.NewLogger(ctx, tracer, "localhost:4317", "go-error", nil)
+	if err != nil {
+		log.Fatalf("failed to create logger: %v", err)
+	}
+	defer func() {
+		if err := shutdown(ctx); err != nil {
+			log.Fatalf("failed to shutdown logger: %v", err)
+		}
+	}()
 
 	telemetry, err := o11y.NewTelemetry(tracer, metrics, logger)
 	if err != nil {
