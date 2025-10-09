@@ -12,7 +12,6 @@ import (
 	"go.opentelemetry.io/otel/log/global"
 	sdkLogger "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -35,16 +34,8 @@ type logger struct {
 	loggerProvider *sdkLogger.LoggerProvider
 }
 
-func NewLogger(ctx context.Context, tracer Tracer, endpoint, serviceName, serviceVersion string) (Logger, func(context.Context) error, error) {
-	resource, err := resource.New(ctx, resource.WithAttributes(
-		semconv.ServiceName(serviceName),
-		semconv.ServiceVersion(serviceVersion),
-	))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create resource: %v", err)
-	}
-
-	loggerExporter, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL("http://localhost:4318/v1/logs"))
+func NewLogger(ctx context.Context, tracer Tracer, endpoint, serviceName string, resource *resource.Resource) (Logger, func(context.Context) error, error) {
+	loggerExporter, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL(endpoint))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to initialize logger exporter: %w", err)
 	}

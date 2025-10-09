@@ -11,7 +11,6 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -48,15 +47,7 @@ type otelSpan struct {
 	span trace.Span
 }
 
-func NewTracer(ctx context.Context, endpoint, serviceName, serviceVersion string) (Tracer, func(context.Context) error, error) {
-	resource, err := resource.New(ctx, resource.WithAttributes(
-		semconv.ServiceName(serviceName),
-		semconv.ServiceVersion(serviceVersion),
-	))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create resource: %v", err)
-	}
-
+func NewTracer(ctx context.Context, endpoint, serviceName string, resource *resource.Resource) (Tracer, func(context.Context) error, error) {
 	traceExporter, err := otlptracegrpc.New(
 		ctx,
 		otlptracegrpc.WithInsecure(),

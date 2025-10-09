@@ -10,7 +10,6 @@ import (
 	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 )
 
 type Metrics interface {
@@ -22,15 +21,7 @@ type metrics struct {
 	meter otelmetric.Meter
 }
 
-func NewMetrics(ctx context.Context, endpoint, serviceName, serviceVersion string) (Metrics, func(context.Context) error, error) {
-	resource, err := resource.New(ctx, resource.WithAttributes(
-		semconv.ServiceName(serviceName),
-		semconv.ServiceVersion(serviceVersion),
-	))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create resource: %v", err)
-	}
-
+func NewMetrics(ctx context.Context, endpoint, serviceName string, resource *resource.Resource) (Metrics, func(context.Context) error, error) {
 	metricExporter, err := otlpmetricgrpc.New(
 		ctx,
 		otlpmetricgrpc.WithInsecure(),
