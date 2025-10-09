@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/log/global"
 	sdkLogger "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -34,8 +35,16 @@ type logger struct {
 	loggerProvider *sdkLogger.LoggerProvider
 }
 
-func NewLogger(ctx context.Context, tracer Tracer, endpoint, serviceName string, resource *resource.Resource) (Logger, func(context.Context) error, error) {
-	loggerExporter, err := otlploghttp.New(ctx, otlploghttp.WithEndpoint(endpoint))
+func NewLogger(ctx context.Context, tracer Tracer, endpoint, serviceName, serviceVersion string) (Logger, func(context.Context) error, error) {
+	resource, err := resource.New(ctx, resource.WithAttributes(
+		semconv.ServiceName(serviceName),
+		semconv.ServiceVersion(serviceVersion),
+	))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create resource: %v", err)
+	}
+
+	loggerExporter, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL("http://localhost:4318/v1/logs"))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to initialize logger exporter: %w", err)
 	}
@@ -45,7 +54,6 @@ func NewLogger(ctx context.Context, tracer Tracer, endpoint, serviceName string,
 		sdkLogger.WithProcessor(loggerProcessor),
 		sdkLogger.WithResource(resource),
 	)
-
 	global.SetLoggerProvider(loggerProvider)
 	slogger := otelslog.NewLogger(serviceName, otelslog.WithLoggerProvider(loggerProvider))
 
@@ -60,11 +68,11 @@ func NewLogger(ctx context.Context, tracer Tracer, endpoint, serviceName string,
 }
 
 func (l *logger) Debug(ctx context.Context, msg string, fields ...Field) {
-	l.log(ctx, slog.LevelInfo, msg, nil, fields...)
+	l.log(ctx, slog.LevelDebug, msg, nil, fields...)
 }
 
 func (l *logger) Info(ctx context.Context, msg string, fields ...Field) {
-	l.log(ctx, slog.LevelDebug, msg, nil, fields...)
+	l.log(ctx, slog.LevelInfo, msg, nil, fields...)
 }
 
 func (l *logger) Warn(ctx context.Context, msg string, fields ...Field) {

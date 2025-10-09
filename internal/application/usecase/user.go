@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jailtonjunior94/go-error/internal/domain"
 	"github.com/jailtonjunior94/go-error/pkg/o11y"
@@ -23,7 +24,10 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id string) (string, erro
 	ctx, span := uc.telemetry.Tracer().Start(ctx, "create_user_usecase.execute")
 	defer span.End()
 
+	start := time.Now()
+
 	uc.telemetry.Metrics().AddCounter(ctx, "user_usecase_calls_total", 1, nil)
+	uc.telemetry.Logger().Info(ctx, "GetUserByID called", o11y.Field{Key: "id", Value: id})
 
 	if id == "" {
 		span.SetAttributes(o11y.Attribute{Key: "error", Value: "ID do usuário não pode ser vazio"})
@@ -48,5 +52,6 @@ func (uc *UserUseCase) GetUserByID(ctx context.Context, id string) (string, erro
 		)
 	}
 
+	uc.telemetry.Metrics().RecordHistogram(ctx, "user_fetch_duration_seconds", time.Since(start).Seconds(), nil)
 	return "Usuário de exemplo", nil
 }

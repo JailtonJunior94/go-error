@@ -14,18 +14,17 @@ import (
 func main() {
 	ctx := context.Background()
 
-	metrics, shutdown, err := o11y.NewMetrics(ctx, "localhost:4317", "go-error", nil)
+	metrics, shutdown, err := o11y.NewMetrics(ctx, "localhost:4317", "go-error", "1.0.0")
 	if err != nil {
 		log.Fatalf("failed to create metrics: %v", err)
 	}
-
 	defer func() {
 		if err := shutdown(ctx); err != nil {
 			log.Fatalf("failed to shutdown metrics: %v", err)
 		}
 	}()
 
-	tracer, shutdown, err := o11y.NewTracer(ctx, "localhost:4317", "go-error", nil)
+	tracer, shutdown, err := o11y.NewTracer(ctx, "localhost:4317", "go-error", "1.0.0")
 	if err != nil {
 		log.Fatalf("failed to create tracer: %v", err)
 	}
@@ -35,7 +34,7 @@ func main() {
 		}
 	}()
 
-	logger, shutdown, err := o11y.NewLogger(ctx, tracer, "localhost:4317", "go-error", nil)
+	logger, shutdown, err := o11y.NewLogger(ctx, tracer, "localhost:4318", "go-error", "1.0.0")
 	if err != nil {
 		log.Fatalf("failed to create logger: %v", err)
 	}
